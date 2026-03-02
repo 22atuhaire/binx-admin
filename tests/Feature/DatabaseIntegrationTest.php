@@ -22,7 +22,7 @@ class DatabaseIntegrationTest extends TestCase
             'name' => 'Test Donor',
             'email' => 'donor@example.com',
             'password' => bcrypt('password'),
-            'role' => 'user',
+            'role' => 'donor',
             'phone' => '555-1234',
             'address' => '123 Test St',
             'status' => 'active',
@@ -31,7 +31,7 @@ class DatabaseIntegrationTest extends TestCase
         $this->assertDatabaseHas('users', [
             'id' => $user->id,
             'name' => 'Test Donor',
-            'role' => 'user',
+            'role' => 'donor',
         ]);
     }
 
@@ -53,7 +53,7 @@ class DatabaseIntegrationTest extends TestCase
      */
     public function test_create_waste_post(): void
     {
-        $user = User::factory()->regularUser()->create();
+        $user = User::factory()->donor()->create();
 
         $post = $user->wastePosts()->create([
             'title' => 'Test Waste Post',
@@ -76,7 +76,7 @@ class DatabaseIntegrationTest extends TestCase
      */
     public function test_create_collection_job(): void
     {
-        $user = User::factory()->regularUser()->create();
+        $user = User::factory()->donor()->create();
         $collector = User::factory()->collector()->create();
         $post = $user->wastePosts()->create([
             'title' => 'Test Post',
@@ -107,7 +107,7 @@ class DatabaseIntegrationTest extends TestCase
     public function test_create_earning(): void
     {
         $collector = User::factory()->collector()->create();
-        $user = User::factory()->regularUser()->create();
+        $user = User::factory()->donor()->create();
         $post = $user->wastePosts()->create([
             'title' => 'Test Post',
             'description' => 'Description',
@@ -145,7 +145,7 @@ class DatabaseIntegrationTest extends TestCase
      */
     public function test_read_user_with_relationships(): void
     {
-        $user = User::factory()->regularUser()->create();
+        $user = User::factory()->donor()->create();
         $user->wastePosts()->create([
             'title' => 'Post 1',
             'description' => 'Desc 1',
@@ -157,7 +157,7 @@ class DatabaseIntegrationTest extends TestCase
 
         $foundUser = User::with('wastePosts')->find($user->id);
 
-        $this->assertEquals('user', $foundUser->role);
+        $this->assertEquals('donor', $foundUser->role);
         $this->assertEquals($foundUser->wastePosts->count(), 1);
     }
 
@@ -187,7 +187,7 @@ class DatabaseIntegrationTest extends TestCase
      */
     public function test_update_waste_post_status(): void
     {
-        $user = User::factory()->regularUser()->create();
+        $user = User::factory()->donor()->create();
         $post = $user->wastePosts()->create([
             'title' => 'Test Post',
             'description' => 'Description',
@@ -210,7 +210,7 @@ class DatabaseIntegrationTest extends TestCase
      */
     public function test_update_collection_job_status(): void
     {
-        $user = User::factory()->regularUser()->create();
+        $user = User::factory()->donor()->create();
         $collector = User::factory()->collector()->create();
         $post = $user->wastePosts()->create([
             'title' => 'Test Post',
@@ -243,7 +243,7 @@ class DatabaseIntegrationTest extends TestCase
      */
     public function test_delete_waste_post(): void
     {
-        $user = User::factory()->regularUser()->create();
+        $user = User::factory()->donor()->create();
         $post = $user->wastePosts()->create([
             'title' => 'Post to Delete',
             'description' => 'Description',
@@ -297,7 +297,7 @@ class DatabaseIntegrationTest extends TestCase
      */
     public function test_cascade_delete_waste_posts(): void
     {
-        $user = User::factory()->regularUser()->create();
+        $user = User::factory()->donor()->create();
         $user->wastePosts()->create([
             'title' => 'Post 1',
             'description' => 'Desc 1',
@@ -322,7 +322,7 @@ class DatabaseIntegrationTest extends TestCase
     public function test_collection_job_earning_relationship(): void
     {
         $collector = User::factory()->collector()->create();
-        $user = User::factory()->regularUser()->create();
+        $user = User::factory()->donor()->create();
         $post = $user->wastePosts()->create([
             'title' => 'Test Post',
             'description' => 'Description',
