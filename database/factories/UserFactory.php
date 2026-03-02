@@ -29,7 +29,7 @@ class UserFactory extends Factory
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
-            'role' => fake()->randomElement(['user', 'collector']),
+            'role' => fake()->randomElement(['donor', 'collector']),
             'phone' => fake()->phoneNumber(),
             'address' => fake()->address(),
             'status' => 'active',
@@ -47,22 +47,65 @@ class UserFactory extends Factory
     }
 
     /**
-     * Create a collector user.
+     * Create an admin user (always active).
+     */
+    public function admin(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => 'admin',
+            'status' => 'active',
+        ]);
+    }
+
+    /**
+     * Create a collector user (always pending).
      */
     public function collector(): static
     {
         return $this->state(fn (array $attributes) => [
             'role' => 'collector',
+            'status' => 'pending',
         ]);
     }
 
     /**
-     * Create a regular user.
+     * Create a donor user (always active).
      */
-    public function regularUser(): static
+    public function donor(): static
     {
         return $this->state(fn (array $attributes) => [
-            'role' => 'user',
+            'role' => 'donor',
+            'status' => 'active',
+        ]);
+    }
+
+    /**
+     * Create a blocked user.
+     */
+    public function blocked(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => 'blocked',
+        ]);
+    }
+
+    /**
+     * Create a pending user.
+     */
+    public function pending(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => 'pending',
+        ]);
+    }
+
+    /**
+     * Create an active user.
+     */
+    public function active(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => 'active',
         ]);
     }
 }

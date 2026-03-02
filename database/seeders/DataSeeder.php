@@ -15,15 +15,21 @@ class DataSeeder extends Seeder
      */
     public function run(): void
     {
-        // Create regular users (waste post creators)
-        $users = User::factory(10)->regularUser()->create();
+        // Create admin users (always active)
+        $admins = User::factory(2)->admin()->create();
 
-        // Create collectors
+        // Create donor users (always active)
+        $donors = User::factory(12)->donor()->create();
+
+        // Create collector users (always pending)
         $collectors = User::factory(5)->collector()->create();
 
-        // Create waste posts from regular users
+        // Create some active collectors
+        $activeCollectors = User::factory(3)->collector()->active()->create();
+
+        // Create waste posts from donor users
         $wastePosts = [];
-        foreach ($users as $user) {
+        foreach ($donors as $user) {
             $posts = WastePost::factory(random_int(1, 3))
                 ->for($user)
                 ->create();
@@ -34,7 +40,8 @@ class DataSeeder extends Seeder
         // Create jobs and link collectors to waste posts
         foreach ($wastePosts as $postData) {
             if (fake()->boolean(70)) { // 70% chance a post gets a job
-                $collector = fake()->randomElement($collectors);
+                $allCollectors = $collectors->merge($activeCollectors);
+                $collector = fake()->randomElement($allCollectors->all());
 
                 $job = CollectionJob::factory()
                     ->for(WastePost::find($postData['id']))
@@ -51,8 +58,9 @@ class DataSeeder extends Seeder
             }
         }
 
-        // Create some independent earnings records
-        $collectors->each(function ($collector) {
+        // Create some independent earnings records for collectors
+        $allCollectors = $collectors->merge($activeCollectors);
+        $allCollectors->each(function ($collector) {
             Earning::factory(random_int(0, 3))
                 ->for($collector, 'collector')
                 ->create();

@@ -12,6 +12,20 @@ class User extends Authenticatable
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
+    // Role Constants
+    const ROLE_ADMIN = 'admin';
+
+    const ROLE_DONOR = 'donor';
+
+    const ROLE_COLLECTOR = 'collector';
+
+    // Status Constants
+    const STATUS_PENDING = 'pending';
+
+    const STATUS_ACTIVE = 'active';
+
+    const STATUS_BLOCKED = 'blocked';
+
     /**
      * The attributes that are mass assignable.
      *
@@ -73,5 +87,83 @@ class User extends Authenticatable
     public function earnings()
     {
         return $this->hasMany(Earning::class, 'collector_id');
+    }
+
+    // ========== Role Helper Methods ==========
+
+    /**
+     * Check if user is an admin.
+     */
+    public function isAdmin(): bool
+    {
+        return $this->role === self::ROLE_ADMIN;
+    }
+
+    /**
+     * Check if user is a donor.
+     */
+    public function isDonor(): bool
+    {
+        return $this->role === self::ROLE_DONOR;
+    }
+
+    /**
+     * Check if user is a collector.
+     */
+    public function isCollector(): bool
+    {
+        return $this->role === self::ROLE_COLLECTOR;
+    }
+
+    // ========== Status Helper Methods ==========
+
+    /**
+     * Check if user status is pending.
+     */
+    public function isPending(): bool
+    {
+        return $this->status === self::STATUS_PENDING;
+    }
+
+    /**
+     * Check if user status is active.
+     */
+    public function isActive(): bool
+    {
+        return $this->status === self::STATUS_ACTIVE;
+    }
+
+    /**
+     * Check if user status is blocked.
+     */
+    public function isBlocked(): bool
+    {
+        return $this->status === self::STATUS_BLOCKED;
+    }
+
+    // ========== Status Management Methods ==========
+
+    /**
+     * Activate a user (set status to active).
+     */
+    public function activate(): void
+    {
+        $this->update(['status' => self::STATUS_ACTIVE]);
+    }
+
+    /**
+     * Block a user (set status to blocked).
+     */
+    public function block(): void
+    {
+        $this->update(['status' => self::STATUS_BLOCKED]);
+    }
+
+    /**
+     * Set user as pending.
+     */
+    public function setPending(): void
+    {
+        $this->update(['status' => self::STATUS_PENDING]);
     }
 }

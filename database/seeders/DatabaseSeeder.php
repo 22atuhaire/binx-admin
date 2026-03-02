@@ -15,12 +15,19 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-            'role' => 'user',
+        // Create test admin
+        User::factory()->admin()->create([
+            'name' => 'Admin User',
+            'email' => 'admin@example.com',
         ]);
 
+        // Create test donor
+        User::factory()->donor()->create([
+            'name' => 'Test Donor',
+            'email' => 'test@example.com',
+        ]);
+
+        // Create seeded data
         $this->call([
             DataSeeder::class,
         ]);
