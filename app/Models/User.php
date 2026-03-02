@@ -21,6 +21,11 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role',
+        'phone',
+        'address',
+        'status',
+        'rating',
     ];
 
     /**
@@ -44,5 +49,29 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Get all waste posts created by this user.
+     */
+    public function wastePosts()
+    {
+        return $this->hasMany(WastePost::class);
+    }
+
+    /**
+     * Get all collection jobs assigned to this collector.
+     */
+    public function jobs()
+    {
+        return $this->hasMany(CollectionJob::class, 'collector_id');
+    }
+
+    /**
+     * Get all earnings for this collector.
+     */
+    public function earnings()
+    {
+        return $this->hasMany(Earning::class, 'collector_id');
     }
 }

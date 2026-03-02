@@ -29,6 +29,10 @@ class UserFactory extends Factory
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
+            'role' => fake()->randomElement(['user', 'collector']),
+            'phone' => fake()->phoneNumber(),
+            'address' => fake()->address(),
+            'status' => 'active',
         ];
     }
 
@@ -39,6 +43,26 @@ class UserFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
+        ]);
+    }
+
+    /**
+     * Create a collector user.
+     */
+    public function collector(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => 'collector',
+        ]);
+    }
+
+    /**
+     * Create a regular user.
+     */
+    public function regularUser(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => 'user',
         ]);
     }
 }
