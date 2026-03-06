@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\CollectorController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -25,25 +26,13 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     })->name('dashboard');
 
     // Pending collectors approval
-    Route::get('/collectors/pending', function () {
-        $pendingCollectors = \App\Models\User::where('role', \App\Models\User::ROLE_COLLECTOR)
-            ->where('status', \App\Models\User::STATUS_PENDING)
-            ->latest()
-            ->paginate(20);
-
-        return view('admin.collectors.pending', compact('pendingCollectors'));
-    })->name('collectors.pending');
+    Route::get('/collectors/pending', [CollectorController::class, 'pending'])->name('collectors.pending');
 
     // Approve collector
-    Route::post('/collectors/{user}/approve', function (\App\Models\User $user) {
-        if ($user->isCollector() && $user->isPending()) {
-            $user->activate();
+    Route::post('/collectors/{user}/approve', [CollectorController::class, 'approve'])->name('collectors.approve');
 
-            return redirect()->back()->with('success', 'Collector approved successfully!');
-        }
-
-        return redirect()->back()->with('error', 'Invalid collector status.');
-    })->name('collectors.approve');
+    // Reject collector
+    Route::post('/collectors/{user}/reject', [CollectorController::class, 'reject'])->name('collectors.reject');
 
     // Block user
     Route::post('/users/{user}/block', function (\App\Models\User $user) {

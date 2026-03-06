@@ -65,6 +65,7 @@ class UserFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'role' => 'collector',
             'status' => 'pending',
+            'id_document' => 'documents/collector_ids/sample_'.fake()->uuid().'.pdf',
         ]);
     }
 

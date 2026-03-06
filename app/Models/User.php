@@ -40,6 +40,8 @@ class User extends Authenticatable
         'address',
         'status',
         'rating',
+        'id_document',
+        'rejection_reason',
     ];
 
     /**
