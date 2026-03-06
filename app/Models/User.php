@@ -6,11 +6,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;
 
     // Role Constants
     const ROLE_ADMIN = 'admin';
@@ -200,5 +201,13 @@ class User extends Authenticatable
     public function isSuspended(): bool
     {
         return $this->suspended_at !== null;
+    }
+
+    /**
+     * Alias for jobs relationship (for API compatibility).
+     */
+    public function collectorJobs()
+    {
+        return $this->hasMany(CollectionJob::class, 'collector_id');
     }
 }

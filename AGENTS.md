@@ -12,6 +12,7 @@ This application is a Laravel application and its main Laravel ecosystems packag
 - php - 8.2.4
 - laravel/framework (LARAVEL) - v12
 - laravel/prompts (PROMPTS) - v0
+- laravel/sanctum (SANCTUM) - v4
 - laravel/boost (BOOST) - v2
 - laravel/breeze (BREEZE) - v2
 - laravel/mcp (MCP) - v0
@@ -19,7 +20,8 @@ This application is a Laravel application and its main Laravel ecosystems packag
 - laravel/pint (PINT) - v1
 - laravel/sail (SAIL) - v1
 - phpunit/phpunit (PHPUNIT) - v11
-- tailwindcss (TAILWINDCSS) - v4
+- alpinejs (ALPINEJS) - v3
+- tailwindcss (TAILWINDCSS) - v3
 
 ## Conventions
 
@@ -124,6 +126,13 @@ protected function isAccessible(User $user, ?string $path = null): bool
 ## PHPDoc Blocks
 
 - Add useful array shape type definitions when appropriate.
+
+=== tests rules ===
+
+# Test Enforcement
+
+- Every change must be programmatically tested. Write a new test or update an existing test, then run the affected tests to make sure they pass.
+- Run the minimum number of tests needed to ensure code quality and speed. Use `php artisan test --compact` with a specific filename or filter.
 
 === laravel/core rules ===
 
