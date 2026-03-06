@@ -42,6 +42,8 @@ class User extends Authenticatable
         'rating',
         'id_document',
         'rejection_reason',
+        'suspended_at',
+        'suspension_reason',
     ];
 
     /**
@@ -64,6 +66,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'suspended_at' => 'datetime',
         ];
     }
 
@@ -167,5 +170,35 @@ class User extends Authenticatable
     public function setPending(): void
     {
         $this->update(['status' => self::STATUS_PENDING]);
+    }
+
+    /**
+     * Suspend a collector temporarily.
+     */
+    public function suspend(string $reason): void
+    {
+        $this->update([
+            'suspended_at' => now(),
+            'suspension_reason' => $reason,
+        ]);
+    }
+
+    /**
+     * Reactivate a suspended collector.
+     */
+    public function reactivate(): void
+    {
+        $this->update([
+            'suspended_at' => null,
+            'suspension_reason' => null,
+        ]);
+    }
+
+    /**
+     * Check if collector is suspended.
+     */
+    public function isSuspended(): bool
+    {
+        return $this->suspended_at !== null;
     }
 }

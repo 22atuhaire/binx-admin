@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\CollectorController;
+use App\Http\Controllers\Admin\WastePostController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -25,14 +26,25 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
         return view('admin.dashboard');
     })->name('dashboard');
 
-    // Pending collectors approval
+    // Pending collectors approval (must come before collectors/{user} routes)
     Route::get('/collectors/pending', [CollectorController::class, 'pending'])->name('collectors.pending');
 
-    // Approve collector
-    Route::post('/collectors/{user}/approve', [CollectorController::class, 'approve'])->name('collectors.approve');
+    // Active collectors management
+    Route::get('/collectors', [CollectorController::class, 'index'])->name('collectors.index');
 
-    // Reject collector
+    // Collector-specific actions
+    Route::post('/collectors/{user}/suspend', [CollectorController::class, 'suspend'])->name('collectors.suspend');
+    Route::post('/collectors/{user}/reactivate', [CollectorController::class, 'reactivate'])->name('collectors.reactivate');
+    Route::post('/collectors/{user}/approve', [CollectorController::class, 'approve'])->name('collectors.approve');
     Route::post('/collectors/{user}/reject', [CollectorController::class, 'reject'])->name('collectors.reject');
+    Route::get('/collectors/{user}/job-history', [CollectorController::class, 'jobHistory'])->name('collectors.job-history');
+
+    // Waste posts management
+    Route::get('/waste-posts', [WastePostController::class, 'index'])->name('waste-posts.index');
+    Route::get('/waste-posts/{wastePost}', [WastePostController::class, 'show'])->name('waste-posts.show');
+    Route::delete('/waste-posts/{wastePost}', [WastePostController::class, 'destroy'])->name('waste-posts.destroy');
+    Route::post('/waste-posts/{wastePost}/assign', [WastePostController::class, 'assign'])->name('waste-posts.assign');
+    Route::post('/waste-posts/{wastePost}/cancel', [WastePostController::class, 'cancel'])->name('waste-posts.cancel');
 
     // Block user
     Route::post('/users/{user}/block', function (\App\Models\User $user) {

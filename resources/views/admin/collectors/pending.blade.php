@@ -4,9 +4,14 @@
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                 {{ __('Pending Collectors') }}
             </h2>
-            <a href="{{ route('admin.dashboard') }}" class="text-sm text-gray-600 hover:text-gray-900">
-                ← Back to Dashboard
-            </a>
+            <div class="flex gap-3">
+                <a href="{{ route('admin.collectors.index') }}" class="text-sm text-blue-600 hover:text-blue-900">
+                    Active Collectors
+                </a>
+                <a href="{{ route('admin.dashboard') }}" class="text-sm text-gray-600 hover:text-gray-900">
+                    ← Back to Dashboard
+                </a>
+            </div>
         </div>
     </x-slot>
 

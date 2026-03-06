@@ -54,6 +54,9 @@
                             {{ \App\Models\User::where('role', \App\Models\User::ROLE_COLLECTOR)
                                 ->where('status', \App\Models\User::STATUS_ACTIVE)->count() }}
                         </div>
+                        <a href="{{ route('admin.collectors.index') }}" class="text-sm text-green-600 hover:text-green-800 underline">
+                            View all →
+                        </a>
                     </div>
                 </div>
 
@@ -64,6 +67,9 @@
                         <div class="text-3xl font-bold text-blue-900">
                             {{ \App\Models\WastePost::count() }}
                         </div>
+                        <a href="{{ route('admin.waste-posts.index') }}" class="text-sm text-blue-600 hover:text-blue-800 underline">
+                            View all →
+                        </a>
                     </div>
                 </div>
             </div>
@@ -75,6 +81,12 @@
                     <div class="flex flex-wrap gap-4">
                         <a href="{{ route('admin.collectors.pending') }}" class="inline-flex items-center px-4 py-2 bg-yellow-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-yellow-700">
                             Approve Collectors
+                        </a>
+                        <a href="{{ route('admin.collectors.index') }}" class="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700">
+                            Manage Collectors
+                        </a>
+                        <a href="{{ route('admin.waste-posts.index') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700">
+                            Manage Waste Posts
                         </a>
                         <a href="{{ route('admin.users.index') }}" class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700">
                             Manage Users
