@@ -63,6 +63,29 @@ class AuthTest extends TestCase
         $response->assertJsonValidationErrors(['password']);
     }
 
+    public function test_user_can_register_with_confirm_password_field(): void
+    {
+        $response = $this->postJson('/api/auth/register', [
+            'name' => 'John Donor',
+            'email' => 'john.confirm@example.com',
+            'password' => 'Password123!',
+            'confirm_password' => 'Password123!',
+            'role' => 'donor',
+        ]);
+
+        $response->assertStatus(201);
+        $response->assertJsonStructure([
+            'message',
+            'user' => ['id', 'name', 'email', 'role'],
+            'token',
+        ]);
+
+        $this->assertDatabaseHas('users', [
+            'email' => 'john.confirm@example.com',
+            'role' => 'donor',
+        ]);
+    }
+
     public function test_register_requires_strong_password(): void
     {
         $response = $this->postJson('/api/auth/register', [
@@ -277,5 +300,117 @@ class AuthTest extends TestCase
         $this->withHeader('Authorization', "Bearer $token2")
             ->getJson('/api/auth/me')
             ->assertOk();
+    }
+
+    public function test_collector_can_register_without_email(): void
+    {
+        $response = $this->postJson('/api/collector/register', [
+            'name' => 'John Collector',
+            'phone' => '0700123456',
+            'password' => 'Password123!',
+            'password_confirmation' => 'Password123!',
+            'vehicle_type' => 'Truck',
+        ]);
+
+        $response->assertStatus(201);
+        $response->assertJsonStructure([
+            'success',
+            'message',
+            'user' => ['id', 'name', 'phone', 'role', 'vehicle_type', 'status'],
+        ]);
+
+        $this->assertDatabaseHas('users', [
+            'phone' => '0700123456',
+            'role' => User::ROLE_COLLECTOR,
+            'vehicle_type' => 'Truck',
+            'status' => User::STATUS_PENDING,
+            'email' => null,
+        ]);
+    }
+
+    public function test_collector_can_register_with_email(): void
+    {
+        $response = $this->postJson('/api/collector/register', [
+            'name' => 'John Collector',
+            'phone' => '0700123456',
+            'email' => 'collector@example.com',
+            'password' => 'Password123!',
+            'password_confirmation' => 'Password123!',
+            'vehicle_type' => 'Truck',
+        ]);
+
+        $response->assertStatus(201);
+        $response->assertJsonStructure([
+            'success',
+            'message',
+            'user',
+        ]);
+
+        $this->assertDatabaseHas('users', [
+            'email' => 'collector@example.com',
+            'phone' => '0700123456',
+            'role' => User::ROLE_COLLECTOR,
+        ]);
+    }
+
+    public function test_user_can_login_with_phone(): void
+    {
+        $user = User::factory()->create([
+            'phone' => '0700123456',
+            'email' => null,
+            'password' => Hash::make('Password123!'),
+            'role' => User::ROLE_COLLECTOR,
+        ]);
+
+        $response = $this->postJson('/api/auth/login', [
+            'phone' => '0700123456',
+            'password' => 'Password123!',
+        ]);
+
+        $response->assertOk();
+        $response->assertJsonStructure([
+            'message',
+            'user' => ['id', 'name', 'phone'],
+            'token',
+        ]);
+    }
+
+    public function test_login_with_phone_fails_with_invalid_password(): void
+    {
+        User::factory()->create([
+            'phone' => '0700123456',
+            'email' => null,
+            'password' => Hash::make('Password123!'),
+        ]);
+
+        $response = $this->postJson('/api/auth/login', [
+            'phone' => '0700123456',
+            'password' => 'wrong-password',
+        ]);
+
+        $response->assertStatus(401);
+        $response->assertJson(['message' => 'Invalid credentials']);
+    }
+
+    public function test_login_requires_email_or_phone(): void
+    {
+        $response = $this->postJson('/api/auth/login', [
+            'password' => 'Password123!',
+        ]);
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors(['email', 'phone']);
+    }
+
+    public function test_collector_register_requires_password(): void
+    {
+        $response = $this->postJson('/api/collector/register', [
+            'name' => 'John Collector',
+            'phone' => '0700123456',
+            'vehicle_type' => 'Truck',
+        ]);
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors(['password']);
     }
 }

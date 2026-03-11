@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\Admin\CollectorApprovalController;
 use App\Http\Controllers\Api\Auth\AuthController;
 use App\Http\Controllers\Api\CollectionJobController;
 use App\Http\Controllers\Api\ProfileController;
@@ -9,6 +10,8 @@ use Illuminate\Support\Facades\Route;
 Route::get('/health', function () {
     return response()->json(['status' => 'ok', 'timestamp' => now()]);
 });
+// Collector registration (public)
+Route::post('/collector/register', [AuthController::class, 'collectorRegister']);
 
 // Authentication routes (public)
 Route::prefix('auth')->group(function () {
@@ -51,6 +54,13 @@ Route::prefix('profile')->middleware('auth:sanctum')->group(function () {
     Route::put('/', [ProfileController::class, 'update']);
     Route::get('/earnings', [ProfileController::class, 'earnings']);
     Route::get('/history', [ProfileController::class, 'history']);
+});
+
+// Admin collector approval endpoints (authenticated admin only)
+Route::prefix('admin')->middleware(['auth:sanctum', 'admin'])->group(function () {
+    Route::get('/collectors/pending', [CollectorApprovalController::class, 'pending']);
+    Route::post('/collectors/{user}/approve', [CollectorApprovalController::class, 'approve']);
+    Route::post('/collectors/{user}/reject', [CollectorApprovalController::class, 'reject']);
 });
 
 // Public utility endpoints

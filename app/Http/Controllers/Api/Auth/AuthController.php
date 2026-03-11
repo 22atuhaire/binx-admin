@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules\Password;
 
 class AuthController extends Controller
@@ -17,6 +18,12 @@ class AuthController extends Controller
      */
     public function register(Request $request): JsonResponse
     {
+        if (! $request->filled('password_confirmation') && $request->filled('confirm_password')) {
+            $request->merge([
+                'password_confirmation' => $request->input('confirm_password'),
+            ]);
+        }
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
@@ -47,16 +54,82 @@ class AuthController extends Controller
     }
 
     /**
+     * Register a new collector.
+     */
+    public function collectorRegister(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255',
+            'phone' => 'required|string|max:20',
+            'email' => 'nullable|email|max:255|unique:users',
+            'password' => ['required', Password::defaults()],
+            'vehicle_type' => 'required|string|max:100',
+            // 'id_document' => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120', // Max 5MB
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation error',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        // Handle ID document upload
+        $idDocumentPath = null;
+        if ($request->hasFile('id_document')) {
+            $idDocumentPath = $request->file('id_document')->store('id_documents', 'public');
+        }
+
+        // Create collector user
+        $user = User::create([
+            'name' => $request->name,
+            'phone' => $request->phone,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'role' => User::ROLE_COLLECTOR,
+            'vehicle_type' => $request->vehicle_type,
+            'id_document' => $idDocumentPath,
+            'status' => User::STATUS_PENDING,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Registration submitted for approval',
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'phone' => $user->phone,
+                'email' => $user->email,
+                'role' => $user->role,
+                'vehicle_type' => $user->vehicle_type,
+                'status' => $user->status,
+            ],
+        ], 201);
+    }
+
+    /**
      * Login a user.
      */
     public function login(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'email' => ['required', 'email'],
+            'email' => ['required_without:phone', 'nullable', 'email'],
+            'phone' => ['required_without:email', 'nullable', 'string'],
             'password' => ['required'],
         ]);
 
-        $user = User::where('email', $validated['email'])->first();
+        // Try to find user by email or phone
+        $user = User::query()
+            ->where(function ($query) use ($request, $validated) {
+                if ($request->filled('email')) {
+                    $query->where('email', $validated['email']);
+                }
+                if ($request->filled('phone')) {
+                    $query->orWhere('phone', $validated['phone']);
+                }
+            })
+            ->first();
 
         if (! $user || ! Hash::check($validated['password'], $user->password)) {
             return response()->json([
