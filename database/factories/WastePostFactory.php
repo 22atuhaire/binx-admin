@@ -29,4 +29,25 @@ class WastePostFactory extends Factory
             'status' => 'open',
         ];
     }
+
+    public function pending(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => 'pending',
+        ]);
+    }
+
+    public function open(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => 'open',
+        ]);
+    }
+
+    public function taken(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => 'taken',
+        ]);
+    }
 }

@@ -5,9 +5,15 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\WastePostResource;
 use App\Models\CollectionJob;
+use App\Models\User;
 use App\Models\WastePost;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class WastePostController extends Controller
 {
@@ -16,7 +22,8 @@ class WastePostController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $query = WastePost::with(['user', 'latestJob.collector'])->where('status', WastePost::STATUS_OPEN);
+        $query = WastePost::with(['user', 'latestJob.collector'])
+            ->whereIn('status', [WastePost::STATUS_OPEN, WastePost::STATUS_PENDING]);
 
         // Filter by category
         if ($request->filled('category')) {
@@ -77,38 +84,71 @@ class WastePostController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
-        $user = $request->user();
+        $validator = Validator::make($request->all(), [
+            'waste_types' => ['required', 'array', 'min:1'],
+            'waste_types.*' => ['string', 'max:50', Rule::in(WastePost::FOOD_WASTE_TYPES)],
+            'quantity' => ['required', 'numeric', 'gt:0'],
+            'notes' => ['nullable', 'string', 'max:1000'],
+            'pickup_time' => ['required', 'string', 'max:100'],
+            'address' => ['required', 'string', 'max:255'],
+            'instructions' => ['nullable', 'string', 'max:1000'],
+            'photos' => ['nullable', 'array'],
+            'photos.*' => ['string'],
+        ]);
 
-        if (! $user->isDonor()) {
+        if ($validator->fails()) {
             return response()->json([
-                'message' => 'Only donors can create waste posts',
-            ], 403);
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors(),
+            ], 422);
         }
 
-        $validated = $request->validate([
-            'title' => ['required', 'string', 'max:255'],
-            'description' => ['required', 'string', 'max:1000'],
-            'category' => ['required', 'string', 'max:100'],
-            'quantity' => ['nullable', 'string', 'max:100'],
-            'location' => ['required', 'string', 'max:255'],
-        ]);
+        $user = $request->user() ?? $this->resolveGuestDonor();
+        $userId = $user->id;
 
         $wastePost = WastePost::create([
-            'user_id' => $user->id,
-            'title' => $validated['title'],
-            'description' => $validated['description'],
-            'category' => $validated['category'],
-            'quantity' => $validated['quantity'],
-            'location' => $validated['location'],
-            'status' => WastePost::STATUS_OPEN,
+            'user_id' => $userId,
+            'donor_id' => $userId,
+            'title' => implode(', ', $request->input('waste_types', [])),
+            'description' => $request->input('notes') ?? 'Created from mobile app',
+            'category' => $request->input('waste_types.0'),
+            'location' => $request->input('address'),
+            'waste_types' => $request->input('waste_types'),
+            'quantity' => $request->input('quantity'),
+            'notes' => $request->input('notes'),
+            'pickup_time' => $request->input('pickup_time'),
+            'address' => $request->input('address'),
+            'instructions' => $request->input('instructions'),
+            'photos' => $request->input('photos'),
+            'status' => WastePost::STATUS_PENDING,
+            'collector_id' => null,
+            'created_at' => Carbon::now(),
+            'updated_at' => Carbon::now(),
         ]);
 
-        // TODO: Handle image upload if provided
-
         return response()->json([
+            'success' => true,
             'message' => 'Waste post created successfully',
-            'data' => new WastePostResource($wastePost->load('user')),
+            'data' => [
+                'id' => $wastePost->id,
+                'status' => $wastePost->status,
+                'estimated_pickup_time' => null,
+            ],
         ], 201);
+    }
+
+    private function resolveGuestDonor(): User
+    {
+        return User::query()->firstOrCreate(
+            ['email' => 'guest-donor@binx.local'],
+            [
+                'name' => 'Guest Donor',
+                'password' => Hash::make(Str::random(40)),
+                'role' => User::ROLE_DONOR,
+                'status' => User::STATUS_ACTIVE,
+            ]
+        );
     }
 
     /**
@@ -228,8 +268,15 @@ class WastePostController extends Controller
      */
     public function categories(): JsonResponse
     {
-        $categories = WastePost::distinct()
-            ->pluck('category')
+        $categories = collect(WastePost::FOOD_WASTE_TYPES)
+            ->merge(
+                WastePost::query()
+                    ->distinct()
+                    ->pluck('category')
+                    ->filter()
+                    ->all()
+            )
+            ->unique()
             ->sort()
             ->values();
 

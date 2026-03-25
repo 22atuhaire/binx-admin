@@ -13,6 +13,8 @@ class WastePost extends Model
     // Status Constants
     const STATUS_OPEN = 'open';
 
+    const STATUS_PENDING = 'pending';
+
     const STATUS_TAKEN = 'taken';
 
     const STATUS_COMPLETED = 'completed';
@@ -21,16 +23,39 @@ class WastePost extends Model
 
     const STATUS_EXPIRED = 'expired';
 
+    const FOOD_WASTE_TYPES = ['cooked', 'vegetables', 'bakery', 'meat', 'mixed'];
+
     protected $fillable = [
         'user_id',
+        'donor_id',
+        'collector_id',
         'title',
         'description',
         'category',
         'location',
+        'address',
         'quantity',
+        'waste_types',
+        'notes',
+        'pickup_time',
+        'instructions',
+        'photos',
         'image_path',
         'status',
     ];
+
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'waste_types' => 'array',
+            'photos' => 'array',
+        ];
+    }
 
     /**
      * Get the user who created this waste post.
@@ -78,7 +103,7 @@ class WastePost extends Model
      */
     public function isOpen(): bool
     {
-        return $this->status === self::STATUS_OPEN;
+        return in_array($this->status, [self::STATUS_OPEN, self::STATUS_PENDING], true);
     }
 
     /**

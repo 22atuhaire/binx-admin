@@ -352,6 +352,48 @@ class AuthTest extends TestCase
             'role' => User::ROLE_COLLECTOR,
         ]);
     }
++
+    public function test_collector_can_login_via_collector_login_endpoint(): void
+    {
+        User::factory()->create([
+            'phone' => '0700123456',
+            'email' => null,
+            'password' => Hash::make('Password123!'),
+            'role' => User::ROLE_COLLECTOR,
+            'status' => User::STATUS_ACTIVE,
+        ]);
+
+        $response = $this->postJson('/api/collector/login', [
+            'phone' => '0700123456',
+            'password' => 'Password123!',
+        ]);
+
+        $response->assertOk();
+        $response->assertJsonStructure([
+            'message',
+            'user' => ['id', 'name', 'phone', 'role'],
+            'token',
+        ]);
+    }
+
+    public function test_non_collector_cannot_login_via_collector_login_endpoint(): void
+    {
+        User::factory()->create([
+            'phone' => '0700999888',
+            'email' => 'donor@example.com',
+            'password' => Hash::make('Password123!'),
+            'role' => User::ROLE_DONOR,
+            'status' => User::STATUS_ACTIVE,
+        ]);
+
+        $response = $this->postJson('/api/collector/login', [
+            'phone' => '0700999888',
+            'password' => 'Password123!',
+        ]);
+
+        $response->assertStatus(403);
+        $response->assertJson(['message' => 'Only collectors can log in here']);
+    }
 
     public function test_user_can_login_with_phone(): void
     {

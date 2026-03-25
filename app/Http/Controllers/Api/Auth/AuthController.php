@@ -109,6 +109,47 @@ class AuthController extends Controller
     }
 
     /**
+     * Login a collector.
+     */
+    public function collectorLogin(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'phone' => ['required', 'string'],
+            'password' => ['required'],
+        ]);
+
+        $user = User::query()->where('phone', $validated['phone'])->first();
+
+        if (! $user || ! Hash::check($validated['password'], $user->password)) {
+            return response()->json([
+                'message' => 'Invalid credentials',
+            ], 401);
+        }
+
+        if (! $user->isCollector()) {
+            return response()->json([
+                'message' => 'Only collectors can log in here',
+            ], 403);
+        }
+
+        if ($user->isBlocked()) {
+            return response()->json([
+                'message' => 'Your account has been blocked',
+            ], 403);
+        }
+
+        $user->tokens()->delete();
+
+        $token = $user->createToken('api-token')->plainTextToken;
+
+        return response()->json([
+            'message' => 'Login successful',
+            'user' => new UserResource($user),
+            'token' => $token,
+        ]);
+    }
+
+    /**
      * Login a user.
      */
     public function login(Request $request): JsonResponse

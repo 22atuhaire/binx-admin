@@ -12,6 +12,7 @@ Route::get('/health', function () {
 });
 // Collector registration (public)
 Route::post('/collector/register', [AuthController::class, 'collectorRegister']);
+Route::post('/collector/login', [AuthController::class, 'collectorLogin']);
 
 // Authentication routes (public)
 Route::prefix('auth')->group(function () {
@@ -28,10 +29,10 @@ Route::prefix('waste-posts')->group(function () {
     Route::get('/', [WastePostController::class, 'index']);
     Route::get('/{wastePost}', [WastePostController::class, 'show']);
     Route::get('/{wastePost}/location', [WastePostController::class, 'location']);
+    Route::post('/', [WastePostController::class, 'store']);
 
     // Authenticated endpoints
     Route::middleware('auth:sanctum')->group(function () {
-        Route::post('/', [WastePostController::class, 'store']);
         Route::put('/{wastePost}', [WastePostController::class, 'update']);
         Route::delete('/{wastePost}', [WastePostController::class, 'destroy']);
 
